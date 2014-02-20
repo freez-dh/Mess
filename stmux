@@ -1,0 +1,62 @@
+#! /bin/bash
+
+function check_succ_or_exit {
+	if [ $? != 0 ]
+	then
+		exit 1
+	fi
+}
+
+# window-num;window-name;window-dir;extra-cmd
+window_table=("1;tools;tools; 2;logic;logic; 3;root;; 4;ipython;tools; 5;engine;engine; ")
+echo $window_table
+function get_window_num {
+	echo $1 | awk 'BEGIN {FS=";"} {print $1}'
+}
+function get_window_name {
+	echo $1 | awk 'BEGIN {FS=";"} {print $2}'
+}
+function get_window_dir {
+	echo $1 | awk 'BEGIN {FS=";"} {print $3}'
+}
+function get_extra_cmd {
+	echo $1 | awk 'BEGIN {FS=";"} {print $4}'
+}
+
+tname=$1
+if [ -z $tname ];
+then
+	tname=git_trunk2
+fi
+
+pushd $HOME > /dev/null
+
+tmux start-server
+
+tmux new-session -d -s $tname -n tools
+check_succ_or_exit
+
+
+for i in $window_table
+do
+	tmux new-window -t$tname:$(get_window_num $i) -n $(get_window_name $i)
+done
+
+for i in $window_table
+do
+	num=$(get_window_num $i)
+	window_dir=$(get_window_dir $i)
+	extra_cmd=$(get_extra_cmd $i)
+	tmux send-keys -t$tname:$num "cd $tname;cd $window_dir;clear" C-m
+	if [ $extra_cmd ]
+	then
+		tmux send-keys -t$tname:$num "$extra_cmd" C-m
+	fi
+done
+
+tmux select-window -t$tname:1
+
+tmux attach-session -d -t$tname
+
+popd
+
