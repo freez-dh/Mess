@@ -9,7 +9,6 @@ function check_succ_or_exit {
 
 # window-num;window-name;window-dir;extra-cmd
 window_table=("1;tools;tools; 2;logic;logic; 3;root;; 4;ipython;tools; 5;engine;engine; ")
-echo $window_table
 function get_window_num {
 	echo $1 | awk 'BEGIN {FS=";"} {print $1}'
 }
@@ -33,7 +32,11 @@ pushd $HOME > /dev/null
 
 tmux start-server
 
-tmux new-session -d -s $tname -n tools
+output=$(tmux new-session -d -s $tname -n tools)
+if [ $(echo $output | grep duplicate session) ];
+then
+	tmux attach-session -d -t$tname
+fi
 check_succ_or_exit
 
 

@@ -1,0 +1,22 @@
+#! /bin/bash
+server_id=$1
+if [ -z $1 ];
+then
+	if [ -f "../etc/config.py" ]
+	then
+		pushd ../etc > /dev/null
+		server_id=$(echo -e "import config\nprint config.server_group_id" | python)
+		popd > /dev/null
+	fi
+fi
+ks $server_id
+if [ $? != 0 ]
+then
+	exit 1
+fi
+bname=$(basename $(pwd))
+if [ $bname != "tools" ]
+then
+	exit 0
+fi
+python service_manager.py restart
